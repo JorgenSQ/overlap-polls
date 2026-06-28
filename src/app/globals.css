@@ -1,26 +1,79 @@
 @import "tailwindcss";
-
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+@import "leaflet/dist/leaflet.css";
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-cream: #f8f7f5;
+  --color-coral: #e85a3c;
+  --color-coral-dark: #d44a2f;
+  --color-coral-deep: #b83d28;
+  --color-ink: #1a1816;
+  --color-ink-hover: #0f0e0d;
+  --color-muted: #6b6560;
+  --color-muted-dark: #4a4541;
+  --color-border: #e5e2de;
+  --color-border-input: #d9d5d0;
+  --color-best: #fef0ec;
+  --color-best-border: #f5d0c6;
+  --color-best-text: #9c5a42;
+  --color-maybe: #fde8d8;
+  --color-maybe-text: #c45a20;
+  --color-no: #ebe8e4;
+  --color-no-text: #8a8078;
+  --color-no-border: #d4cfc8;
+  --color-no-best: #ffffff;
+  --color-no-best-text: #6b6560;
+  --color-no-best-border: #c4bdb4;
+  --color-placeholder: #9e978f;
+  --color-add-slot: #f5f3f0;
+  --color-add-slot-border: #d4cfc8;
+  --color-add-slot-text: #6b5d4f;
+  --color-ghost: #8a7f74;
+  --color-vote-yes: #e85a3c;
+  --color-vote-maybe: #d4952f;
+  --color-vote-no: #c44a3d;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 10px;
+  --font-display: var(--font-bricolage);
+  --font-body: var(--font-hanken);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+* {
+  box-sizing: border-box;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-cream);
+  color: var(--color-ink);
+  font-family: var(--font-body), system-ui, sans-serif;
+}
+
+input:focus,
+textarea:focus {
+  outline: none;
+  border-color: var(--color-coral) !important;
+}
+
+::placeholder {
+  color: var(--color-placeholder);
+}
+
+*::-webkit-scrollbar {
+  height: 8px;
+  width: 8px;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: #d0ccc6;
+  border-radius: var(--radius-sm);
+}
+
+.leaflet-container {
+  font-family: var(--font-body), system-ui, sans-serif;
+  background: #f0eeeb;
+}
+
+.leaflet-control-attribution {
+  font-size: 10px !important;
+  background: rgba(255, 255, 255, 0.85) !important;
 }

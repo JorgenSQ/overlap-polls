@@ -1,36 +1,96 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Overlap
 
-## Getting Started
+A free, login-free scheduling poll — like Doodle, but simpler. Create a poll, share a unique link, and find when your group can meet.
 
-First, run the development server:
+Built with **Next.js**, **Prisma**, and **SQLite** (local) / **PostgreSQL** (production on Vercel, Railway, or Supabase).
+
+## Features
+
+- **No accounts** — share a short link (`/p/abc123XY`)
+- **Create polls** with title, location, notes, and multiple date/time slots
+- **Respond** with Yes / Maybe / No per slot
+- **Results grid** with best-time highlighting and participant avatars
+- **ICS calendar export** for any slot or the best time
+- **Edit your response** — stored locally via edit token (no login)
+- **Mobile-friendly** warm UI with coral accent and cream background
+
+## Local development
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+npm run dev        # syncs schema + starts http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+`npm run dev` runs `prisma db push` first so the SQLite file stays in sync after schema changes. To sync without starting the server:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+npm run db:push    # creates/updates prisma/dev.db
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### Try the flow
 
-## Learn More
+1. Open [http://localhost:3000](http://localhost:3000) and create a poll
+2. Copy the share link and open it in another tab (or incognito)
+3. Submit availability and view results
 
-To learn more about Next.js, take a look at the following resources:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Quick deploy (Vercel + Neon)
 
-## Deploy on Vercel
+1. Push this repo to GitHub and **Import** it in [Vercel](https://vercel.com/new).
+2. Create a free [Neon](https://neon.tech) PostgreSQL database; copy the connection string.
+3. In `prisma/schema.prisma`, set `provider = "postgresql"` (keep `sqlite` for local dev only).
+4. In Vercel **Environment Variables** (Production):
+   - `DATABASE_URL` — Neon connection string (include `?sslmode=require` if needed)
+   - `NEXT_PUBLIC_APP_URL` — your Vercel URL, e.g. `https://overlap-polls.vercel.app`
+5. Redeploy. The `vercel-build` script runs `prisma db push` against production Postgres.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+If the Vercel CLI is logged in locally: `npx vercel --prod` from the project root.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Production deployment
+
+### Database (Supabase / Railway / Vercel Postgres)
+
+1. Create a PostgreSQL database
+2. In `prisma/schema.prisma`, change `provider` from `sqlite` to `postgresql`
+3. Set `DATABASE_URL` to your Postgres connection string
+4. Run `npx prisma db push` (or `prisma migrate deploy`)
+
+### Vercel
+
+```bash
+vercel
+```
+
+Set environment variables:
+
+- `DATABASE_URL` — Postgres connection string
+- `NEXT_PUBLIC_APP_URL` — e.g. `https://your-app.vercel.app` (for correct share links)
+
+### Railway
+
+Deploy this repository. Add `DATABASE_URL` and `NEXT_PUBLIC_APP_URL` in Railway variables.
+
+## Project structure
+
+```
+├── prisma/schema.prisma   # Poll, Slot, Response, Vote models
+├── public/logo.svg        # App logo (overlapping circles)
+├── src/
+│   ├── app/
+│   │   ├── page.tsx              # Create poll
+│   │   ├── p/[id]/page.tsx       # Respond
+│   │   ├── p/[id]/share/         # Share link after create
+│   │   └── p/[id]/results/       # Availability grid
+│   ├── components/               # UI components
+│   └── lib/                        # scoring, ICS, formatting
+└── Design/                         # Original design prototype (reference)
+```
+
+## Design reference
+
+The UI uses a warm cream background (`#FBF7F0`), coral accent (`#EC6B4E`), and Bricolage Grotesque + Hanken Grotesk fonts. The original prototype lives in `Design/Pencil.dc.html`.
+
+## License
+
+MIT

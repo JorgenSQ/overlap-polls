@@ -1,0 +1,67 @@
+// Local: sqlite + DATABASE_URL=file:./dev.db
+// Production: change provider below to "postgresql" and set DATABASE_URL to Postgres (Neon/Supabase/Vercel Postgres).
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Poll {
+  id             String     @id
+  title          String
+  location       String?
+  locationLat    Float?
+  locationLng    Float?
+  description    String?
+  durationMin    Int        @default(90)
+  organizerToken String     @unique
+  closedAt       DateTime?
+  selectedSlotId String?
+  selectedSlot   Slot?      @relation("SelectedSlot", fields: [selectedSlotId], references: [id], onDelete: SetNull)
+  createdAt      DateTime   @default(now())
+  slots          Slot[]
+  responses      Response[]
+}
+
+model Slot {
+  id              String  @id @default(cuid())
+  pollId          String
+  poll            Poll    @relation(fields: [pollId], references: [id], onDelete: Cascade)
+  date            String
+  endDate         String?
+  time            String
+  sortOrder       Int     @default(0)
+  votes           Vote[]
+  selectedInPolls Poll[]  @relation("SelectedSlot")
+
+  @@index([pollId])
+}
+
+model Response {
+  id        String   @id @default(cuid())
+  pollId    String
+  poll      Poll     @relation(fields: [pollId], references: [id], onDelete: Cascade)
+  name      String
+  editToken String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  votes     Vote[]
+
+  @@index([pollId])
+}
+
+model Vote {
+  id         String   @id @default(cuid())
+  responseId String
+  response   Response @relation(fields: [responseId], references: [id], onDelete: Cascade)
+  slotId     String
+  slot       Slot     @relation(fields: [slotId], references: [id], onDelete: Cascade)
+  value      String
+
+  @@unique([responseId, slotId])
+  @@index([slotId])
+}
