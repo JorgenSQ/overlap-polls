@@ -38,6 +38,7 @@ export function ResultsView({ poll: initialPoll }: ResultsViewProps) {
   const [closeError, setCloseError] = useState("");
 
   const isClosed = poll.closedAt != null;
+  const isOrganizer = organizerToken != null && !isClosed;
   const finalSlot = poll.selectedSlot ?? best;
 
   useEffect(() => {
@@ -198,142 +199,136 @@ export function ResultsView({ poll: initialPoll }: ResultsViewProps) {
         </div>
       )}
 
-      {organizerToken && !isClosed && (
-        <div className="bg-white border border-border rounded-[var(--radius-lg)] p-5 mb-6">
-          <div className="text-xs font-bold text-coral tracking-[0.1em] uppercase mb-3">
-            Organizer
-          </div>
-          <p className="text-muted text-sm m-0 mb-4">
-            Pick the final time and close the poll. No one will be able to add
-            or change responses after that.
-          </p>
-          <div className="flex flex-col gap-2 mb-4">
-            {poll.slots.map((slot) => {
-              const isBest = slot.id === best?.id;
-              return (
-                <label
-                  key={slot.id}
-                  className={`flex items-center gap-3 cursor-pointer border rounded-[var(--radius-md)] px-4 py-3 transition-colors ${
-                    selectedSlotId === slot.id
-                      ? "border-coral bg-best/40"
-                      : "border-border hover:border-border-input"
-                  }`}
-                >
-                  <input
-                    type="radio"
-                    name="final-slot"
-                    value={slot.id}
-                    checked={selectedSlotId === slot.id}
-                    onChange={() => setSelectedSlotId(slot.id)}
-                    className="accent-[var(--color-coral)]"
-                  />
-                  <div className="flex-1">
-                    <div className="font-bold text-sm">
-                      {fmtDateRange(slot.date, slot.endDate)}
-                      {isBest && (
-                        <span className="text-[11px] text-coral ml-1.5">
-                          ★ best
-                        </span>
-                      )}
-                    </div>
-                    <div className="text-[13px] text-muted">{fmtTime(slot.time)}</div>
-                  </div>
-                </label>
-              );
-            })}
-          </div>
-          {closeError && (
-            <p className="text-sm text-coral-deep font-medium mb-3">{closeError}</p>
-          )}
-          <Button
-            onClick={handleClosePoll}
-            disabled={closing || !selectedSlotId}
-            variant="primary"
-          >
-            {closing ? "Closing…" : "Confirm & close poll"}
-          </Button>
-        </div>
-      )}
-
-      {n > 0 ? (
+      {n > 0 || isOrganizer ? (
         <>
-          <div className="flex flex-wrap gap-2 mb-4">
-            {responses.map((r, i) => {
-              const isYou = myToken && r.editToken === myToken;
-              const color = avatarColor(i);
-              return (
-                <div
-                  key={r.id}
-                  className="flex items-center gap-2 bg-white border border-border rounded-[var(--radius-sm)] py-1 pl-1 pr-3 text-[13px] font-semibold"
-                >
+          {n > 0 && (
+            <div className="flex flex-wrap gap-2 mb-4">
+              {responses.map((r, i) => {
+                const isYou = myToken && r.editToken === myToken;
+                const color = avatarColor(i);
+                return (
                   <div
-                    className="w-[22px] h-[22px] rounded-full text-white flex items-center justify-center font-bold text-[11px]"
-                    style={{ background: color }}
+                    key={r.id}
+                    className="flex items-center gap-2 bg-white border border-border rounded-[var(--radius-sm)] py-1 pl-1 pr-3 text-[13px] font-semibold"
                   >
-                    {(r.name[0] || "?").toUpperCase()}
-                  </div>
-                  <span>{isYou ? `${r.name} (you)` : r.name}</span>
-                </div>
-              );
-            })}
-          </div>
-
-          <div className="bg-white border border-border rounded-[var(--radius-lg)] p-4.5 overflow-x-auto">
-            <div className="flex flex-col gap-1.5 min-w-fit">
-              <div
-                className="grid gap-1.5 items-center"
-                style={{ gridTemplateColumns: gridCols }}
-              >
-                <div />
-                {responses.map((r, i) => (
-                  <div key={r.id} className="flex justify-center">
                     <div
-                      className="w-[34px] h-[34px] rounded-full text-white flex items-center justify-center font-bold text-sm"
-                      style={{ background: avatarColor(i) }}
-                      title={r.name}
+                      className="w-[22px] h-[22px] rounded-full text-white flex items-center justify-center font-bold text-[11px]"
+                      style={{ background: color }}
                     >
                       {(r.name[0] || "?").toUpperCase()}
                     </div>
+                    <span>{isYou ? `${r.name} (you)` : r.name}</span>
                   </div>
-                ))}
-              </div>
+                );
+              })}
+            </div>
+          )}
+
+          {isOrganizer && n === 0 && (
+            <p className="text-muted text-sm mb-4">
+              No responses yet — pick a final time below, then close the poll
+              when you&apos;re ready.
+            </p>
+          )}
+
+          <div className="bg-white border border-border rounded-[var(--radius-lg)] p-4.5 overflow-x-auto">
+            <div className="flex flex-col gap-1.5 min-w-fit">
+              {n > 0 && (
+                <div
+                  className="grid gap-1.5 items-center"
+                  style={{ gridTemplateColumns: gridCols }}
+                >
+                  <div />
+                  {responses.map((r, i) => (
+                    <div key={r.id} className="flex justify-center">
+                      <div
+                        className="w-[34px] h-[34px] rounded-full text-white flex items-center justify-center font-bold text-sm"
+                        style={{ background: avatarColor(i) }}
+                        title={r.name}
+                      >
+                        {(r.name[0] || "?").toUpperCase()}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
 
               {poll.slots.map((slot, i) => {
                 const isBest = !isClosed && i === bestIdx;
                 const isFinal = isClosed && slot.id === poll.selectedSlotId;
+                const isSelected = isOrganizer && selectedSlotId === slot.id;
                 return (
                   <div
                     key={slot.id}
-                    className={`grid gap-1.5 items-center ${isBest || isFinal ? "bg-best rounded-[var(--radius-md)]" : ""}`}
+                    role={isOrganizer ? "button" : undefined}
+                    tabIndex={isOrganizer ? 0 : undefined}
+                    onClick={
+                      isOrganizer
+                        ? () => setSelectedSlotId(slot.id)
+                        : undefined
+                    }
+                    onKeyDown={
+                      isOrganizer
+                        ? (e) => {
+                            if (e.key === "Enter" || e.key === " ") {
+                              e.preventDefault();
+                              setSelectedSlotId(slot.id);
+                            }
+                          }
+                        : undefined
+                    }
+                    className={`grid gap-1.5 items-center rounded-[var(--radius-md)] transition-colors ${
+                      isBest || isFinal ? "bg-best" : ""
+                    } ${
+                      isSelected
+                        ? "ring-2 ring-coral ring-inset"
+                        : isOrganizer
+                          ? "cursor-pointer hover:bg-cream/60"
+                          : ""
+                    }`}
                     style={{ gridTemplateColumns: gridCols }}
                   >
-                    <div className="py-1.5 pl-2 pr-2.5">
-                      <div className="flex items-center gap-1.5 font-bold text-sm">
-                        {fmtDateRange(slot.date, slot.endDate)}
-                        {isBest && (
-                          <span className="text-[11px] text-coral">★</span>
-                        )}
-                        {isFinal && (
-                          <span className="text-[11px] text-coral-deep">✓</span>
-                        )}
+                    <div className="py-1.5 pl-2 pr-2.5 flex items-start gap-2.5">
+                      {isOrganizer && (
+                        <input
+                          type="radio"
+                          name="final-slot"
+                          checked={isSelected}
+                          onChange={() => setSelectedSlotId(slot.id)}
+                          onClick={(e) => e.stopPropagation()}
+                          className="accent-[var(--color-coral)] mt-1 shrink-0"
+                          aria-label={`Select ${fmtDateRange(slot.date, slot.endDate)} ${fmtTime(slot.time)} as final time`}
+                        />
+                      )}
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-1.5 font-bold text-sm">
+                          {fmtDateRange(slot.date, slot.endDate)}
+                          {isBest && (
+                            <span className="text-[11px] text-coral">★</span>
+                          )}
+                          {isFinal && (
+                            <span className="text-[11px] text-coral-deep">✓</span>
+                          )}
+                        </div>
+                        <div className="text-[13px] text-muted mt-px">
+                          {fmtTime(slot.time)}
+                        </div>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            downloadIcs(
+                              slot,
+                              poll.title,
+                              poll.location,
+                              poll.durationMin,
+                            );
+                          }}
+                          className="mt-1 bg-transparent border-none p-0 cursor-pointer text-[11px] font-semibold text-ghost hover:text-coral"
+                        >
+                          ＋ calendar
+                        </button>
                       </div>
-                      <div className="text-[13px] text-muted mt-px">
-                        {fmtTime(slot.time)}
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() =>
-                          downloadIcs(
-                            slot,
-                            poll.title,
-                            poll.location,
-                            poll.durationMin,
-                          )
-                        }
-                        className="mt-1 bg-transparent border-none p-0 cursor-pointer text-[11px] font-semibold text-ghost hover:text-coral"
-                      >
-                        ＋ calendar
-                      </button>
                     </div>
                     {responses.map((r) => {
                       const v = r.votes[slot.id] as VoteValue | undefined;
@@ -353,19 +348,42 @@ export function ResultsView({ poll: initialPoll }: ResultsViewProps) {
             </div>
           </div>
 
-          <div className="flex gap-4.5 flex-wrap mt-4 text-[13px] text-muted">
-            <Legend mark="✓" className="bg-coral text-white" label="Available" />
-            <Legend
-              mark="?"
-              className="bg-maybe text-maybe-text"
-              label="If need be"
-            />
-            <Legend
-              mark="·"
-              className="bg-no text-no-text border border-no-border"
-              label="Can't"
-            />
-          </div>
+          {isOrganizer && (
+            <div className="mt-4 bg-white border border-border rounded-[var(--radius-lg)] p-4.5">
+              <p className="text-muted text-sm m-0 mb-3">
+                Pick the final time above, then close the poll. No one will be
+                able to add or change responses after that.
+              </p>
+              {closeError && (
+                <p className="text-sm text-coral-deep font-medium mb-3">
+                  {closeError}
+                </p>
+              )}
+              <Button
+                onClick={handleClosePoll}
+                disabled={closing || !selectedSlotId}
+                variant="primary"
+              >
+                {closing ? "Closing…" : "Confirm & close poll"}
+              </Button>
+            </div>
+          )}
+
+          {n > 0 && (
+            <div className="flex gap-4.5 flex-wrap mt-4 text-[13px] text-muted">
+              <Legend mark="✓" className="bg-coral text-white" label="Available" />
+              <Legend
+                mark="?"
+                className="bg-maybe text-maybe-text"
+                label="If need be"
+              />
+              <Legend
+                mark="·"
+                className="bg-no text-no-text border border-no-border"
+                label="Can't"
+              />
+            </div>
+          )}
 
           <div className="mt-6.5 flex gap-2.5 flex-wrap">
             {!isClosed && (
