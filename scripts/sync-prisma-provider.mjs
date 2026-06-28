@@ -5,7 +5,13 @@ import { fileURLToPath } from "node:url";
 const root = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
 const schemaPath = path.join(root, "prisma", "schema.prisma");
 const url = process.env.DATABASE_URL ?? "";
-const provider = url.startsWith("file:") ? "sqlite" : "postgresql";
+
+if (process.env.VERCEL === "1" && !url) {
+  console.error("DATABASE_URL is required on Vercel");
+  process.exit(1);
+}
+
+const provider = url.startsWith("file:") || !url ? "sqlite" : "postgresql";
 
 let schema = fs.readFileSync(schemaPath, "utf8");
 const pattern =
