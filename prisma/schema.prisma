@@ -1,5 +1,5 @@
 // Local: sqlite + DATABASE_URL=file:./dev.db
-// Production: change provider below to "postgresql" and set DATABASE_URL to Postgres (Neon/Supabase/Vercel Postgres).
+// Production: `scripts/sync-prisma-provider.mjs` sets provider to postgresql when DATABASE_URL is Postgres (Vercel/Neon).
 
 generator client {
   provider = "prisma-client-js"
